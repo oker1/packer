@@ -13,6 +13,7 @@ import (
 
 var builtins = map[string]string{
 	"mitchellh.amazonebs":  "aws",
+	"mitchellh.lxc":        "lxc",
 	"mitchellh.virtualbox": "virtualbox",
 	"mitchellh.vmware":     "vmware",
 }
@@ -140,6 +141,8 @@ func keyToPostProcessor(key string) packer.PostProcessor {
 	switch key {
 	case "aws":
 		return new(AWSBoxPostProcessor)
+	case "lxc":
+		return new(LxcBoxPostProcessor)
 	case "virtualbox":
 		return new(VBoxBoxPostProcessor)
 	case "vmware":

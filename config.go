@@ -23,6 +23,7 @@ const defaultConfig = `
 		"amazon-chroot": "packer-builder-amazon-chroot",
 		"amazon-instance": "packer-builder-amazon-instance",
 		"digitalocean": "packer-builder-digitalocean",
+		"lxc": "packer-builder-lxc",
 		"openstack": "packer-builder-openstack",
 		"virtualbox": "packer-builder-virtualbox",
 		"vmware": "packer-builder-vmware"
