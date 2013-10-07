@@ -20,19 +20,36 @@ func (s *stepExport) Run(state multistep.StateBag) multistep.StepAction {
 	name := config.ContainerName
 
 	containerDir := fmt.Sprintf("/var/lib/lxc/%s", name)
-	outputPath := filepath.Join(config.OutputDir, name + ".tar.gz")
+	outputPath := filepath.Join(config.OutputDir, "rootfs.tar.gz")
 
-	command := []string{
+	commands := make([][]string, 5)
+	commands[0] = []string{
 		"tar", "-C", containerDir, "--numeric-owner", "-czf", outputPath, "./rootfs",
+	}
+	commands[1] = []string{
+		"wget", "https://raw.github.com/fgrehm/vagrant-lxc/master/boxes/common/lxc-template",
+		"-O", filepath.Join(config.OutputDir, "lxc-template"),
+	}
+	commands[2] = []string{
+		"wget", "https://raw.github.com/fgrehm/vagrant-lxc/master/boxes/common/lxc.conf",
+		"-O", filepath.Join(config.OutputDir, "lxc.conf"),
+	}
+	commands[3] = []string{
+		"chmod", "+x", filepath.Join(config.OutputDir, "lxc-template"),
+	}
+	commands[4] = []string{
+		"sh", "-c", "chown $USER:`id -gn` " + filepath.Join(config.OutputDir, "*"),
 	}
 
 	ui.Say("Exporting containter...")
-	err := s.SudoCommand(command...)
-	if err != nil {
-		err := fmt.Errorf("Error creating container: %s", err)
-		state.Put("error", err)
-		ui.Error(err.Error())
-		return multistep.ActionHalt
+	for _, command := range commands {
+		err := s.SudoCommand(command...)
+		if err != nil {
+			err := fmt.Errorf("Error exporting container: %s", err)
+			state.Put("error", err)
+			ui.Error(err.Error())
+			return multistep.ActionHalt
+		}
 	}
 
 	return multistep.ActionContinue

@@ -20,35 +20,20 @@ func (s *stepLxcCreate) Run(state multistep.StateBag) multistep.StepAction {
 
 	rootfs := fmt.Sprintf("/var/lib/lxc/%s/rootfs", name)
 
-	commands := make([][]string, 5)
-	commands[0] = []string{
+	command := []string{
 		"lxc-create", "-n", fmt.Sprintf("%s", name), "-t", "debian",
-	}
-	commands[1] = []string{
-		"sed", "-i", "-e",
-		fmt.Sprintf("s/\\(127.0.0.1\\s\\+localhost\\)/\\1\\n127.0.1.1\\t%s\\n/g", name),
-		fmt.Sprintf("%s/etc/hosts", rootfs),
-	}
-	commands[2] = []string{
-		"chroot", rootfs, "/usr/sbin/update-rc.d", "-f", "checkroot-bootclean.sh", "remove",
-	}
-	commands[3] = []string{
-		"chroot", rootfs, "/usr/sbin/update-rc.d", "-f", "mountall-bootclean.sh", "remove",
-	}
-	commands[4] = []string{
-		"chroot", rootfs, "/usr/sbin/update-rc.d", "-f", "mountnfs-bootclean.sh", "remove",
 	}
 
 	ui.Say("Creating containter...")
-	for _, command := range commands {
-		err := s.SudoCommand(command...)
-		if err != nil {
-			err := fmt.Errorf("Error creating container: %s", err)
-			state.Put("error", err)
-			ui.Error(err.Error())
-			return multistep.ActionHalt
-		}
+	err := s.SudoCommand(command...)
+	if err != nil {
+		err := fmt.Errorf("Error creating container: %s", err)
+		state.Put("error", err)
+		ui.Error(err.Error())
+		return multistep.ActionHalt
 	}
+
+	state.Put("mount_path", rootfs)
 
 	return multistep.ActionContinue
 }
