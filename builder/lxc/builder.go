@@ -23,8 +23,13 @@ type config struct {
 	SecurityMirrorUrl string     `mapstructure:"security_mirror_url"`
 	OutputDir         string     `mapstructure:"output_directory"`
 	ContainerName     string     `mapstructure:"container_name"`
+	CommandWrapper    string     `mapstructure:"command_wrapper"`
 
 	tpl *packer.ConfigTemplate
+}
+
+type wrappedCommandTemplate struct {
+	Command string
 }
 
 type Builder struct {
@@ -56,6 +61,10 @@ func (b *Builder) Prepare(raws ...interface{}) error {
 		b.config.ContainerName = fmt.Sprintf("packer-%s", b.config.PackerBuildName)
 	}
 
+	if b.config.CommandWrapper == "" {
+		b.config.CommandWrapper = "{{.Command}}"
+	}
+
 	if errs != nil && len(errs.Errors) > 0 {
 		return errs
 	}
@@ -64,9 +73,17 @@ func (b *Builder) Prepare(raws ...interface{}) error {
 }
 
 func (b *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packer.Artifact, error) {
+	wrappedCommand := func(command string) (string, error) {
+		return b.config.tpl.Process(
+			b.config.CommandWrapper, &wrappedCommandTemplate{
+				Command: command,
+			})
+	}
+
 	steps := []multistep.Step{
 		new(stepPrepareOutputDir),
 		new(stepLxcCreate),
+		new(StepChrootProvision),
 		new(stepExport),
 	}
 
@@ -76,6 +93,7 @@ func (b *Builder) Run(ui packer.Ui, hook packer.Hook, cache packer.Cache) (packe
 	state.Put("cache", cache)
 	state.Put("hook", hook)
 	state.Put("ui", ui)
+	state.Put("wrappedCommand", CommandWrapper(wrappedCommand))
 
 	// Run
 	if b.config.PackerDebug {

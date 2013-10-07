@@ -119,7 +119,7 @@ func (p *LxcBoxPostProcessor) PostProcess(ui packer.Ui, artifact packer.Artifact
 	}
 
 	// Create the metadata
-	metadata := map[string]string{"provider": "lxc"}
+	metadata := map[string]string{"provider": "lxc", "version": "3"}
 	if err := WriteMetadata(dir, metadata); err != nil {
 		return nil, false, err
 	}
