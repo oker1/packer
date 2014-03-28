@@ -214,7 +214,7 @@ func providerForName(name string) Provider {
 	case "digitalocean":
 		return new(DigitalOceanProvider)
 	case "lxc":
-		return new(LxcBoxPostProcessor)
+		return new(LxcProvider)
 	case "virtualbox":
 		return new(VBoxProvider)
 	case "vmware":
