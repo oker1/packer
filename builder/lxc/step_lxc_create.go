@@ -21,7 +21,8 @@ func (s *stepLxcCreate) Run(state multistep.StateBag) multistep.StepAction {
 	rootfs := fmt.Sprintf("/var/lib/lxc/%s/rootfs", name)
 
 	command := []string{
-		"lxc-create", "-n", fmt.Sprintf("%s", name), "-t", "debian",
+		fmt.Sprintf("MIRROR=%s", config.MirrorUrl), "lxc-create",
+			"-n", fmt.Sprintf("%s", name), "-t", config.Distribution, "--", "-r", config.Release,
 	}
 
 	ui.Say("Creating containter...")
